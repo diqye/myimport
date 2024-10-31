@@ -1,0 +1,8 @@
+.stack-work/
+**/.stack-work/
+*~
+yamls/
+export.yaml
+!yamls/test.yaml
+
+!yamls/example.png

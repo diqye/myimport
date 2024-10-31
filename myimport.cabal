@@ -1,0 +1,82 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.37.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           myimport
+version:        0.1.0.0
+synopsis:       HDBC version of MonadTrnas
+description:    myimport
+category:       HTTP
+homepage:       https://github.com/diqye/myimport.git#readme
+bug-reports:    https://github.com/diqye/myimport.git/issues
+author:         diqye
+maintainer:     diqye@foxmail.com
+copyright:      copyright
+license:        BSD3
+build-type:     Simple
+
+source-repository head
+  type: git
+  location: https://github.com/diqye/myimport.git
+
+library
+  other-modules:
+      Paths_myimport
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -fno-warn-missing-signatures -fno-warn-type-defaults -fno-warn-name-shadowing -fno-warn-orphans -fno-warn-incomplete-uni-patterns -fno-warn-unused-top-binds -fno-warn-unused-imports -XExtendedDefaultRules -XOverloadedStrings -XFlexibleContexts -XConstraintKinds -XScopedTypeVariables -XTemplateHaskell
+  build-depends:
+      QuasiText
+    , aeson
+    , async
+    , attoparsec
+    , base >=4.7 && <5
+    , bytestring
+    , data-default-class
+    , directory
+    , exceptions
+    , filepath
+    , lens
+    , lens-aeson
+    , mtl
+    , mydefault
+    , pandoc
+    , process
+    , string-conversions
+    , text
+    , unordered-containers
+    , vector
+  default-language: Haskell2010
+
+executable myimport
+  main-is: Main.hs
+  other-modules:
+      Paths_myimport
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -fno-warn-missing-signatures -fno-warn-type-defaults -fno-warn-name-shadowing -fno-warn-orphans -fno-warn-incomplete-uni-patterns -fno-warn-unused-top-binds -fno-warn-unused-imports -XExtendedDefaultRules -XOverloadedStrings -XFlexibleContexts -XConstraintKinds -XScopedTypeVariables -XTemplateHaskell -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      QuasiText
+    , aeson
+    , async
+    , attoparsec
+    , base >=4.7 && <5
+    , bytestring
+    , data-default-class
+    , directory
+    , exceptions
+    , filepath
+    , lens
+    , lens-aeson
+    , mtl
+    , mydefault
+    , myimport
+    , pandoc
+    , process
+    , string-conversions
+    , text
+    , unordered-containers
+    , vector
+  default-language: Haskell2010
