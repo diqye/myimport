@@ -7,6 +7,18 @@ Format the imports in the Haskell file as a table style
 2. Import Group by package
 3. Append package comment of every module imported
 
+## Run
+1. Specify file path
+
+```bash
+myimport file/path
+```
+
+2. Through pipe 
+```bash
+cat file/path | myimport 
+```
+
 ## A Haskell file
 ```Haskell
 module Main where

@@ -1,21 +1,26 @@
 module Main where
 
-import           Data.Text                  (Text)               -- text-2.0.2
-import qualified Data.Text                  as T                 -- text-2.0.2
-import qualified Data.Text.IO               as T                 -- text-2.0.2
-import           Data.Functor                                    -- base-4.18.2.1
-import           Data.Char                                       -- base-4.18.2.1
-import           System.Environment         (getArgs)            -- base-4.18.2.1
-import           Control.Applicative        (some, many, (<|>))  -- base-4.18.2.1
-import           Data.List                  (sortOn, nub)        -- base-4.18.2.1
-import           Data.Either                (fromRight)          -- base-4.18.2.1
-import           Debug.Trace                (traceShow)          -- base-4.18.2.1
-import           Control.Monad              (void)               -- base-4.18.2.1
-import           Control.Exception          (try, SomeException) -- base-4.18.2.1
-import           System.Process             (readProcess)        -- process-1.6.19.0
-import           Data.Attoparsec.Text       as AT hiding (try)   -- attoparsec-0.14.4
-import           Data.Attoparsec.Combinator hiding (try)         -- attoparsec-0.14.4
-import           Data.String.Conversions    (cs)                 -- string-conversions-0.4.0.1
+import           Data.Text                  (Text)                                            -- text-2.0.2
+import qualified Data.Text                  as T                                              -- text-2.0.2
+import qualified Data.Text.IO               as T                                              -- text-2.0.2
+import           Data.Functor                                                                 -- base-4.18.2.1
+import           Data.Char                                                                    -- base-4.18.2.1
+import           System.Environment         (getArgs)                                         -- base-4.18.2.1
+import           Control.Applicative        (some, many, (<|>))                               -- base-4.18.2.1
+import           Data.List                  (sortOn, nub)                                     -- base-4.18.2.1
+import           Data.Either                (fromRight)                                       -- base-4.18.2.1
+import           Control.Monad              (void)                                            -- base-4.18.2.1
+import           Control.Exception          (try, SomeException)                              -- base-4.18.2.1
+import           System.IO                  ( hSetBuffering
+                                            , stdin
+                                            , BufferMode(LineBuffering)
+                                            )                                                 -- base-4.18.2.1
+import           System.Process             (readProcess)                                     -- process-1.6.19.0
+import           Data.Attoparsec.Text       as AT hiding (try)                                -- attoparsec-0.14.4
+import           Data.Attoparsec.Combinator hiding (try)                                      -- attoparsec-0.14.4
+import           Data.String.Conversions    (cs)                                              -- string-conversions-0.4.0.1
+import Control.Concurrent.Async(mapConcurrently)
+import Debug.Trace(traceShow)
 
 data Bracket = Name Text | Bracket [Bracket] deriving Show
 -- data M = M1 String [Bracket] | M2 String Text | M3 String Text deriving Show
@@ -44,7 +49,7 @@ importParser = do
             skipSpace
             void $ char '('
             xs <- sepBy (Bracket <$> bracketsParser <|> Name <$>  nameP)  $ skipSpace >> char ',' >> skipSpace
-            -- traceShow xs $ pure ()
+            skipSpace
             void $ char ')'
             skipSpace
             pure xs
@@ -56,8 +61,10 @@ importParser = do
             pure $ txt <> sub
           cusP = do
             void $ char '('
-            xs <- manyTill anyChar $ char ')'
-            pure $ cs $ "(" <> xs <> ")"
+            xs <- AT.takeWhile $ notInClass ")" 
+            void $ AT.take 1
+            -- manyTill anyChar $ char ')'
+            pure $ "(" <> xs <> ")"
           asParser = do
             a <- string "as" <|> string "hiding"
             void $ many $ satisfy isHorizontalSpace
@@ -91,9 +98,9 @@ importParser = do
 
 
 myparser = do
-    prefix <- manyTill (AT.take 1) $ lookAhead importParser
+    prefix <- manyTill ((<>) <$> (AT.takeWhile $ notInClass "\n\r") <*> (option "" $ AT.take 1)) $ void (lookAhead importParser) <|> endOfInput
     im <- many importParser
-    subfix <- AT.takeText
+    subfix <- option "" AT.takeText
     pure (T.concat prefix,im,subfix)
 
 paddingEnd :: Int -> String -> Text
@@ -128,19 +135,24 @@ findModule moduleTxt = do
             pure r
 
 main = do
-    [path] <- getArgs
-    txt <- T.readFile path
+    hSetBuffering stdin LineBuffering
+    txt <- getTxt
     let (Right (pre,b,sub)) = parseOnly myparser txt
     let maxModuleLengh = maximum $ map moduleLength b 
     let maxI = maximum $ map maxIL b
-    let b' = map findPackage b
-    xs <- sequence b'
+    xs <- mapConcurrently findPackage b
+    -- xs <- sequence b'
     let packages = sortOn T.length $  nub $ map fst xs
     let mid = T.intercalate "\n" $ map (transPackage maxI maxModuleLengh xs) packages
     T.putStr $ pre <> mid <> "\n\n" <> sub
     where moduleLength (_,_,M1 m _) = length m
         --   moduleLength (_,_,M2 m _) = length m
           moduleLength (_,_,M3 m _) = length m
+
+          getTxt = do
+            args <- getArgs
+            if null args then T.getContents
+            else T.readFile $ head args
           
           maxIL (_,_,M1 _ brackets) = T.length $ bracketToText brackets
         --   maxIL (_,_,M2 _ as') = T.length as'
