@@ -31,7 +31,7 @@ newline = endOfLine
 
 commonParser = do
     void $ string "--"
-    skipSpace
+    void $ AT.takeWhile AT.isHorizontalSpace
     r <- AT.takeWhile $ notInClass "\n"
     skipSpace
     pure r
